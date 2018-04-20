@@ -1,6 +1,11 @@
 package yusufsait.com.runningpercentilecalculator;
 
+import android.content.ActivityNotFoundException;
 import android.content.Intent;
+import android.database.Cursor;
+import android.database.sqlite.SQLiteDatabase;
+import android.net.Uri;
+import android.support.constraint.ConstraintLayout;
 import android.support.design.widget.NavigationView;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
@@ -8,10 +13,20 @@ import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.Toolbar;
+import android.util.Log;
 import android.view.MenuItem;
+import android.view.View;
+import android.widget.ArrayAdapter;
+import android.widget.EditText;
+import android.widget.Spinner;
+import android.widget.TextView;
+import java.util.HashMap;
+import java.util.Map;
 
 public class CalculatorActivity extends AppCompatActivity {
     private DrawerLayout drawerLayout;
+    String distance = "5k";
+    String gender = "Male";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -19,7 +34,7 @@ public class CalculatorActivity extends AppCompatActivity {
         setContentView(R.layout.activity_calculator);
 
         Toolbar toolbar = findViewById(R.id.toolbar);
-        toolbar.setTitle("Calculate");
+        toolbar.setTitle("Calculate Percentile");
         setSupportActionBar(toolbar);
         ActionBar actionbar = getSupportActionBar();
         actionbar.setDisplayHomeAsUpEnabled(true);
@@ -32,17 +47,55 @@ public class CalculatorActivity extends AppCompatActivity {
                     @Override
                     public boolean onNavigationItemSelected(MenuItem menuItem) {
                         // set item as selected to persist highlight
-                        menuItem.setChecked(true);
                         // close drawer when item is tapped
                         drawerLayout.closeDrawers();
                         switch (menuItem.getItemId()) {
-
+                            case R.id.nav_about:
+                                Intent aboutIntent = new Intent(CalculatorActivity.this, AboutActivity.class);
+                                startActivity(aboutIntent);
+                                break;
+                            case R.id.nav_rate:
+                                Uri uri = Uri.parse("market://details?id=" + getPackageName());
+                                Intent goToMarket = new Intent(Intent.ACTION_VIEW, uri);
+                                // To count with Play market backstack, After pressing back button,
+                                // to taken back to our application, we need to add following flags to intent.
+                                goToMarket.addFlags(Intent.FLAG_ACTIVITY_NO_HISTORY |
+                                        Intent.FLAG_ACTIVITY_NEW_DOCUMENT |
+                                        Intent.FLAG_ACTIVITY_MULTIPLE_TASK);
+                                try {
+                                    startActivity(goToMarket);
+                                } catch (ActivityNotFoundException e) {
+                                    startActivity(new Intent(Intent.ACTION_VIEW,
+                                            Uri.parse("http://play.google.com/store/apps/details?id=" + getPackageName())));
+                                }
+                                break;
+                            case R.id.nav_feedback:
+                                Intent intent = new Intent(Intent.ACTION_SENDTO);
+                                intent.setData(Uri.parse("mailto:")); // only email apps should handle this
+                                String[] strings = new String[]{"yusufsaitappfeedback@gmail.com"};
+                                intent.putExtra(Intent.EXTRA_EMAIL, strings);
+                                intent.putExtra(Intent.EXTRA_SUBJECT, "Feedback");
+                                if (intent.resolveActivity(getPackageManager()) != null) {
+                                    startActivity(intent);
+                                }
+                                break;
+                            case R.id.nav_more:
+                                startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("http://play.google.com/store/apps/dev?id=5782570041305794849")));
                         }
                         // Add code here to update the UI based on the item selected
                         // For example, swap UI fragments here
                         return true;
                     }
                 });
+        Spinner distanceSpinner = (Spinner) findViewById(R.id.distance);
+        ArrayAdapter<CharSequence> distanceAdapter = ArrayAdapter.createFromResource(this, R.array.distance, android.R.layout.simple_spinner_item);
+        distanceAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        distanceSpinner.setAdapter(distanceAdapter);
+
+        Spinner genderSpinner = (Spinner) findViewById(R.id.gender);
+        ArrayAdapter<CharSequence> genderAdapter = ArrayAdapter.createFromResource(this, R.array.gender, android.R.layout.simple_spinner_item);
+        genderAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        genderSpinner.setAdapter(genderAdapter);
     }
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
@@ -53,4 +106,125 @@ public class CalculatorActivity extends AppCompatActivity {
         }
         return super.onOptionsItemSelected(item);
     }
+    public void onClickCalculateButton(View view){
+        TextView percentileTextView = findViewById(R.id.percentile);
+        TextView speedTextView = findViewById(R.id.speed);
+        TextView allPercentileTextView = findViewById(R.id.all_percentile);
+        TextView textView9 = findViewById(R.id.textView9);
+        ConstraintLayout percentileView = findViewById(R.id.percentile_view);
+        ConstraintLayout allPercentileView = findViewById(R.id.all_percentile_view);
+        ConstraintLayout speedView = findViewById(R.id.speed_view);
+
+        int time = getTimeInSeconds();
+        Spinner genderSpinner = findViewById(R.id.gender);
+        gender = genderSpinner.getSelectedItem().toString();
+        String sql = "SELECT * FROM " + gender;
+        int percentile = getPercentile(time, sql);
+        Log.e("percentile", Integer.toString(percentile));
+        double speed = 0;
+        if(distance.equals("5k")){
+            speed = 5/((double)time/(60*60));
+        }
+        else if(distance.equals("10k")){
+            speed = 10/((double)time/(60*60));
+        }
+        else if(distance.equals("half_marathon")){
+            speed = 21.0975/((double)time/(60*60));
+        }
+        else if(distance.equals("marathon")){
+            speed = 42.195/((double)time/(60*60));
+        }
+
+        int allPercentile = getPercentile(time,"SELECT * FROM Alll");
+
+        percentileTextView.setText(Integer.toString(percentile) + "%");
+        allPercentileTextView.setText(Integer.toString(allPercentile) + "%");
+        speedTextView.setText(String.format("%.2f",speed) + " km/hr");
+        textView9.setText("of all " + gender.toLowerCase() + " runners");
+
+
+        if(percentile > 66){
+            percentileView.setBackgroundColor(getResources().getColor(R.color.fast));
+            speedView.setBackgroundColor(getResources().getColor(R.color.fast));
+        }
+        else if(percentile > 33){
+            percentileView.setBackgroundColor(getResources().getColor(R.color.medium));
+            speedView.setBackgroundColor(getResources().getColor(R.color.medium));
+        }
+        else{
+            percentileView.setBackgroundColor(getResources().getColor(R.color.slow));
+            speedView.setBackgroundColor(getResources().getColor(R.color.slow));
+        }
+        if(allPercentile > 66){
+            allPercentileView.setBackgroundColor(getResources().getColor(R.color.fast));
+        }
+        else if(allPercentile > 33){
+            allPercentileView.setBackgroundColor(getResources().getColor(R.color.medium));
+        }
+        else{
+            allPercentileView.setBackgroundColor(getResources().getColor(R.color.slow));
+        }
+        percentileView.setVisibility(View.VISIBLE);
+        allPercentileView.setVisibility(View.VISIBLE);
+        speedView.setVisibility(View.VISIBLE);
+    }
+
+    private int getTimeInSeconds(){
+        EditText hoursEditText = findViewById(R.id.hour);
+        EditText minutesEditText = findViewById(R.id.minute);
+        EditText secondsEditText = findViewById(R.id.second);
+        int hours= 0, minutes = 0, seconds = 0;
+        if(!hoursEditText.getText().toString().equals("")){
+            hours = Integer.parseInt(hoursEditText.getText().toString()) * 60 * 60;
+        }
+        if(!minutesEditText.getText().toString().equals("")){
+            minutes = Integer.parseInt(minutesEditText.getText().toString())*60;
+        }
+        if(!secondsEditText.getText().toString().equals("")){
+            seconds = Integer.parseInt(secondsEditText.getText().toString());
+        }
+        return hours + minutes + seconds;
+    }
+    private int getPercentile(int runningTime, String sql){
+        MyDataBase runningDatabase = new MyDataBase(this);
+        SQLiteDatabase runningSQLDatabase = runningDatabase.getReadableDatabase();
+
+
+        Cursor cursor = runningSQLDatabase.rawQuery(sql,null);
+        HashMap<Integer,Integer> hashMap = new HashMap<>();
+
+        Spinner distanceSpinner = findViewById(R.id.distance);
+        String text = distanceSpinner.getSelectedItem().toString();
+
+        if(text.equals("5 Kilometers")){
+            distance = "5k";
+        }
+        else if(text.equals("10 Kilometers")){
+            distance = "10k";
+        }
+        else if(text.equals("Half Marathon")){
+            distance = "half_marathon";
+        }
+        else if(text.equals("Marathon")){
+            distance = "marathon";
+        }
+
+        String timeColumn = distance + "_time";
+        while(cursor.moveToNext()){
+            int percentile = cursor.getInt(cursor.getColumnIndexOrThrow("percentile"));
+            int time = cursor.getInt(cursor.getColumnIndexOrThrow(timeColumn));
+            hashMap.put(percentile,time);
+        }
+        int runningPercentile = 1;
+        int runningTimeDifference = 99999999;
+        for(Map.Entry<Integer,Integer> entry: hashMap.entrySet()){
+            int difference = Math.abs(runningTime - entry.getValue());
+            if(difference < runningTimeDifference){
+                runningTimeDifference = difference;
+                runningPercentile = entry.getKey();
+            }
+        }
+        return 100-runningPercentile;
+    }
+
 }

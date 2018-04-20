@@ -1,3 +1,18 @@
 <resources>
     <string name="app_name">Running Percentile Calculator</string>
+    <string name="about">About</string>
+    <string name="rate">Rate</string>
+    <string name="feedback">Feedback/Bugs</string>
+    <string name="more">More from this developer</string>
+    <string-array name="distance">
+        <item>5 Kilometers</item>
+        <item>10 Kilometers</item>
+        <item>Half Marathon</item>
+        <item>Marathon</item>
+    </string-array>
+
+    <string-array name="gender">
+        <item>Male</item>
+        <item>Female</item>
+    </string-array>
 </resources>
