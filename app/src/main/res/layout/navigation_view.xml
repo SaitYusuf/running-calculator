@@ -7,4 +7,5 @@
     app:menu="@menu/drawer_items"
     app:headerLayout="@layout/nav_header"
     xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto" />
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:background="@color/levelTwo"/>

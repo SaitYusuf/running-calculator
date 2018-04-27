@@ -2,9 +2,11 @@ package yusufsait.com.runningpercentilecalculator;
 
 import android.content.ActivityNotFoundException;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.net.Uri;
+import android.preference.PreferenceManager;
 import android.support.constraint.ConstraintLayout;
 import android.support.design.widget.NavigationView;
 import android.support.v4.view.GravityCompat;
@@ -14,22 +16,40 @@ import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
+import android.view.KeyEvent;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.inputmethod.EditorInfo;
 import android.widget.ArrayAdapter;
 import android.widget.EditText;
 import android.widget.Spinner;
 import android.widget.TextView;
+import android.widget.Toast;
+
+import com.google.android.gms.ads.AdRequest;
+import com.google.android.gms.ads.AdView;
+
 import java.util.HashMap;
 import java.util.Map;
 
 public class CalculatorActivity extends AppCompatActivity {
     private DrawerLayout drawerLayout;
+    private AdView mAdView;
     String distance = "5k";
     String gender = "Male";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(this);
+        String userTheme = preferences.getString("prefTheme", "darkab");
+        if (userTheme.equals("default"))
+            setTheme(R.style.AppTheme);
+        else if (userTheme.equals("Green"))
+            setTheme(R.style.AppTheme);
+        else if (userTheme.equals("Mint"))
+            setTheme(R.style.AppTheme);
+        else if (userTheme.equals("Grey"))
+            setTheme(R.style.AppTheme);
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_calculator);
 
@@ -87,15 +107,32 @@ public class CalculatorActivity extends AppCompatActivity {
                         return true;
                     }
                 });
-        Spinner distanceSpinner = (Spinner) findViewById(R.id.distance);
+        Spinner distanceSpinner = findViewById(R.id.distance);
         ArrayAdapter<CharSequence> distanceAdapter = ArrayAdapter.createFromResource(this, R.array.distance, android.R.layout.simple_spinner_item);
         distanceAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         distanceSpinner.setAdapter(distanceAdapter);
 
-        Spinner genderSpinner = (Spinner) findViewById(R.id.gender);
+        Spinner genderSpinner = findViewById(R.id.gender);
         ArrayAdapter<CharSequence> genderAdapter = ArrayAdapter.createFromResource(this, R.array.gender, android.R.layout.simple_spinner_item);
         genderAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         genderSpinner.setAdapter(genderAdapter);
+
+        EditText editText = (EditText) findViewById(R.id.second);
+        editText.setOnEditorActionListener(new TextView.OnEditorActionListener() {
+            @Override
+            public boolean onEditorAction(TextView v, int actionId, KeyEvent event) {
+                boolean handled = false;
+                if (actionId == EditorInfo.IME_ACTION_SEND) {
+                    onClickCalculateButton(v);
+                    handled = true;
+                }
+                return handled;
+            }
+        });
+        /*mAdView = findViewById(R.id.adView2);
+        AdRequest adRequest = new AdRequest.Builder().build();
+        mAdView.loadAd(adRequest);*/
+
     }
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
@@ -110,63 +147,41 @@ public class CalculatorActivity extends AppCompatActivity {
         TextView percentileTextView = findViewById(R.id.percentile);
         TextView speedTextView = findViewById(R.id.speed);
         TextView allPercentileTextView = findViewById(R.id.all_percentile);
-        TextView textView9 = findViewById(R.id.textView9);
-        ConstraintLayout percentileView = findViewById(R.id.percentile_view);
-        ConstraintLayout allPercentileView = findViewById(R.id.all_percentile_view);
-        ConstraintLayout speedView = findViewById(R.id.speed_view);
-
-        int time = getTimeInSeconds();
+        TextView textView5 = findViewById(R.id.textView5);
         Spinner genderSpinner = findViewById(R.id.gender);
-        gender = genderSpinner.getSelectedItem().toString();
-        String sql = "SELECT * FROM " + gender;
-        int percentile = getPercentile(time, sql);
-        Log.e("percentile", Integer.toString(percentile));
-        double speed = 0;
-        if(distance.equals("5k")){
-            speed = 5/((double)time/(60*60));
-        }
-        else if(distance.equals("10k")){
-            speed = 10/((double)time/(60*60));
-        }
-        else if(distance.equals("half_marathon")){
-            speed = 21.0975/((double)time/(60*60));
-        }
-        else if(distance.equals("marathon")){
-            speed = 42.195/((double)time/(60*60));
-        }
+        EditText hoursEditText = findViewById(R.id.hour);
+        EditText minutesEditText = findViewById(R.id.minute);
+        EditText secondsEditText = findViewById(R.id.second);
 
-        int allPercentile = getPercentile(time,"SELECT * FROM Alll");
-
-        percentileTextView.setText(Integer.toString(percentile) + "%");
-        allPercentileTextView.setText(Integer.toString(allPercentile) + "%");
-        speedTextView.setText(String.format("%.2f",speed) + " km/hr");
-        textView9.setText("of all " + gender.toLowerCase() + " runners");
+        if(hoursEditText.getText().length() ==0 && minutesEditText.getText().length() == 0 && secondsEditText.getText().length() ==0) {
+            Toast.makeText(this,"Please enter a time",Toast.LENGTH_SHORT).show();
+        }
+        else {
+            int time = getTimeInSeconds();
 
 
-        if(percentile > 66){
-            percentileView.setBackgroundColor(getResources().getColor(R.color.fast));
-            speedView.setBackgroundColor(getResources().getColor(R.color.fast));
+            gender = genderSpinner.getSelectedItem().toString();
+            String sql = "SELECT * FROM " + gender;
+            int percentile = getPercentile(time, sql);
+            Log.e("percentile", Integer.toString(percentile));
+            double speed = 0;
+            if (distance.equals("5k")) {
+                speed = 5 / ((double) time / (60 * 60));
+            } else if (distance.equals("10k")) {
+                speed = 10 / ((double) time / (60 * 60));
+            } else if (distance.equals("half_marathon")) {
+                speed = 21.0975 / ((double) time / (60 * 60));
+            } else if (distance.equals("marathon")) {
+                speed = 42.195 / ((double) time / (60 * 60));
+            }
+
+            int allPercentile = getPercentile(time, "SELECT * FROM Alll");
+
+            percentileTextView.setText(Integer.toString(percentile) + "%");
+            allPercentileTextView.setText(Integer.toString(allPercentile) + "%");
+            speedTextView.setText(String.format("%.2f", speed) + " km/hr");
+            textView5.setText("Percentile of " + gender.toLowerCase() + " runners:");
         }
-        else if(percentile > 33){
-            percentileView.setBackgroundColor(getResources().getColor(R.color.medium));
-            speedView.setBackgroundColor(getResources().getColor(R.color.medium));
-        }
-        else{
-            percentileView.setBackgroundColor(getResources().getColor(R.color.slow));
-            speedView.setBackgroundColor(getResources().getColor(R.color.slow));
-        }
-        if(allPercentile > 66){
-            allPercentileView.setBackgroundColor(getResources().getColor(R.color.fast));
-        }
-        else if(allPercentile > 33){
-            allPercentileView.setBackgroundColor(getResources().getColor(R.color.medium));
-        }
-        else{
-            allPercentileView.setBackgroundColor(getResources().getColor(R.color.slow));
-        }
-        percentileView.setVisibility(View.VISIBLE);
-        allPercentileView.setVisibility(View.VISIBLE);
-        speedView.setVisibility(View.VISIBLE);
     }
 
     private int getTimeInSeconds(){
@@ -224,6 +239,7 @@ public class CalculatorActivity extends AppCompatActivity {
                 runningPercentile = entry.getKey();
             }
         }
+        cursor.close();
         return 100-runningPercentile;
     }
 

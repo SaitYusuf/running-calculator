@@ -35,6 +35,12 @@ public class AboutActivity extends AppCompatActivity {
         i.setData(Uri.parse(url));
         startActivity(i);
     }
+    public void onClickFreepik(View view){
+        String url = "https://www.flaticon.com/authors/freepik";
+        Intent i = new Intent(Intent.ACTION_VIEW);
+        i.setData(Uri.parse(url));
+        startActivity(i);
+    }
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
