@@ -23,14 +23,12 @@ import android.widget.EditText;
 import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
-import com.google.android.gms.ads.AdView;
 
 import java.util.HashMap;
 import java.util.Map;
 
 public class CalculatorActivity extends AppCompatActivity {
     private DrawerLayout drawerLayout;
-    private AdView mAdView;
     String distance = "5k";
     String gender = "Male";
 
@@ -149,9 +147,6 @@ public class CalculatorActivity extends AppCompatActivity {
                 return handled;
             }
         });
-        /*mAdView = findViewById(R.id.adView2);
-        AdRequest adRequest = new AdRequest.Builder().build();
-        mAdView.loadAd(adRequest);*/
     }
 
     public void onClickCalculateButton(View view){
