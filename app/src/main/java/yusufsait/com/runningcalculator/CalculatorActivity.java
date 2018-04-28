@@ -1,13 +1,11 @@
-package yusufsait.com.runningpercentilecalculator;
+package yusufsait.com.runningcalculator;
 
 import android.content.ActivityNotFoundException;
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.net.Uri;
-import android.preference.PreferenceManager;
-import android.support.constraint.ConstraintLayout;
+import android.support.annotation.NonNull;
 import android.support.design.widget.NavigationView;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
@@ -15,18 +13,16 @@ import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.Toolbar;
-import android.util.Log;
 import android.view.KeyEvent;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.inputmethod.EditorInfo;
+import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.EditText;
 import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
-
-import com.google.android.gms.ads.AdRequest;
 import com.google.android.gms.ads.AdView;
 
 import java.util.HashMap;
@@ -40,32 +36,25 @@ public class CalculatorActivity extends AppCompatActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-        SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(this);
-        String userTheme = preferences.getString("prefTheme", "darkab");
-        if (userTheme.equals("default"))
-            setTheme(R.style.AppTheme);
-        else if (userTheme.equals("Green"))
-            setTheme(R.style.AppTheme);
-        else if (userTheme.equals("Mint"))
-            setTheme(R.style.AppTheme);
-        else if (userTheme.equals("Grey"))
-            setTheme(R.style.AppTheme);
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_calculator);
 
         Toolbar toolbar = findViewById(R.id.toolbar);
-        toolbar.setTitle("Calculate Percentile");
+        toolbar.setTitle("Calculate");
         setSupportActionBar(toolbar);
         ActionBar actionbar = getSupportActionBar();
-        actionbar.setDisplayHomeAsUpEnabled(true);
-        actionbar.setHomeAsUpIndicator(R.drawable.ic_menu_white_24dp);
+        if (actionbar != null) {
+            actionbar.setDisplayHomeAsUpEnabled(true);
+            actionbar.setHomeAsUpIndicator(R.drawable.ic_menu_white_24dp);
+        }
+
 
         drawerLayout = findViewById(R.id.drawer_layout);
         NavigationView navigationView = findViewById(R.id.nav_view);
         navigationView.setNavigationItemSelectedListener(
                 new NavigationView.OnNavigationItemSelectedListener() {
                     @Override
-                    public boolean onNavigationItemSelected(MenuItem menuItem) {
+                    public boolean onNavigationItemSelected(@NonNull MenuItem menuItem) {
                         // set item as selected to persist highlight
                         // close drawer when item is tapped
                         drawerLayout.closeDrawers();
@@ -77,8 +66,6 @@ public class CalculatorActivity extends AppCompatActivity {
                             case R.id.nav_rate:
                                 Uri uri = Uri.parse("market://details?id=" + getPackageName());
                                 Intent goToMarket = new Intent(Intent.ACTION_VIEW, uri);
-                                // To count with Play market backstack, After pressing back button,
-                                // to taken back to our application, we need to add following flags to intent.
                                 goToMarket.addFlags(Intent.FLAG_ACTIVITY_NO_HISTORY |
                                         Intent.FLAG_ACTIVITY_NEW_DOCUMENT |
                                         Intent.FLAG_ACTIVITY_MULTIPLE_TASK);
@@ -102,8 +89,6 @@ public class CalculatorActivity extends AppCompatActivity {
                             case R.id.nav_more:
                                 startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("http://play.google.com/store/apps/dev?id=5782570041305794849")));
                         }
-                        // Add code here to update the UI based on the item selected
-                        // For example, swap UI fragments here
                         return true;
                     }
                 });
@@ -117,7 +102,42 @@ public class CalculatorActivity extends AppCompatActivity {
         genderAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         genderSpinner.setAdapter(genderAdapter);
 
-        EditText editText = (EditText) findViewById(R.id.second);
+        distanceSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            public void onItemSelected(AdapterView<?> parent, View view, int position, long id)
+            {
+                String distanceSpinnerText = parent.getItemAtPosition(position).toString();
+                switch (distanceSpinnerText) {
+                    case "5 Kilometers":
+                        distance = "5k";
+                        break;
+                    case "10 Kilometers":
+                        distance = "10k";
+                        break;
+                    case "Half Marathon":
+                        distance = "half_marathon";
+                        break;
+                    case "Marathon":
+                        distance = "marathon";
+                        break;
+                }
+            }
+            public void onNothingSelected(AdapterView<?> parent)
+            {
+
+            }
+        });
+        genderSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            public void onItemSelected(AdapterView<?> parent, View view, int position, long id)
+            {
+                gender = parent.getItemAtPosition(position).toString();
+            }
+            public void onNothingSelected(AdapterView<?> parent)
+            {
+
+            }
+        });
+
+        EditText editText = findViewById(R.id.second);
         editText.setOnEditorActionListener(new TextView.OnEditorActionListener() {
             @Override
             public boolean onEditorAction(TextView v, int actionId, KeyEvent event) {
@@ -132,56 +152,109 @@ public class CalculatorActivity extends AppCompatActivity {
         /*mAdView = findViewById(R.id.adView2);
         AdRequest adRequest = new AdRequest.Builder().build();
         mAdView.loadAd(adRequest);*/
+    }
 
-    }
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        switch (item.getItemId()) {
-            case android.R.id.home:
-                drawerLayout.openDrawer(GravityCompat.START);
-                return true;
-        }
-        return super.onOptionsItemSelected(item);
-    }
     public void onClickCalculateButton(View view){
         TextView percentileTextView = findViewById(R.id.percentile);
-        TextView speedTextView = findViewById(R.id.speed);
+        TextView paceTextView = findViewById(R.id.pace);
         TextView allPercentileTextView = findViewById(R.id.all_percentile);
+        TextView ageGradeTextView = findViewById(R.id.age_grade);
         TextView textView5 = findViewById(R.id.textView5);
         Spinner genderSpinner = findViewById(R.id.gender);
         EditText hoursEditText = findViewById(R.id.hour);
         EditText minutesEditText = findViewById(R.id.minute);
         EditText secondsEditText = findViewById(R.id.second);
+        EditText ageEditText = findViewById(R.id.age);
+
 
         if(hoursEditText.getText().length() ==0 && minutesEditText.getText().length() == 0 && secondsEditText.getText().length() ==0) {
             Toast.makeText(this,"Please enter a time",Toast.LENGTH_SHORT).show();
+            return;
         }
-        else {
-            int time = getTimeInSeconds();
+        if(ageEditText.getText().length() == 0){
+            Toast.makeText(this,"Please enter age",Toast.LENGTH_SHORT).show();
+            return;
+        }
+        if(Integer.parseInt(ageEditText.getText().toString()) < 5 || Integer.parseInt(ageEditText.getText().toString()) > 100){
+            Toast.makeText(this,"Please enter an age between 5 and 100",Toast.LENGTH_SHORT).show();
+            return;
+        }
+        int time = getTimeInSeconds();
+        int percentile = getPercentile("SELECT * FROM " + gender);
+        int allPercentile = getPercentile("SELECT * FROM Alll");
+        int ageGrade = getAgeGrade(Integer.parseInt(ageEditText.getText().toString()));
+        String pace = "";
+        switch (distance) {
+            case "5k":
+                int pace5k = (int) Math.round(time/5);
+                pace = (pace5k/60) + ":" + String.format("%02d",(pace5k%60)) + "/km";
+                break;
+            case "10k":
+                int pace10k = (int) Math.round(time/10);
+                pace = (pace10k/60) + ":" + String.format("%02d",(pace10k%60)) + "/km";
+                break;
+            case "half_marathon":
+                int paceHalf = (int) Math.round(time/21.0975);
+                pace = (paceHalf/60) + ":" + String.format("%02d",(paceHalf%60)) + "/km";
+                break;
+            case "marathon":
+                int paceFull = (int) Math.round(time/42.195);
+                pace = (paceFull/60) + ":" + String.format("%02d",(paceFull%60)) + "/km";
+                break;
+        }
 
+        textView5.setText("Percentile of " + gender.toLowerCase() + " runners:");
 
-            gender = genderSpinner.getSelectedItem().toString();
-            String sql = "SELECT * FROM " + gender;
-            int percentile = getPercentile(time, sql);
-            Log.e("percentile", Integer.toString(percentile));
-            double speed = 0;
-            if (distance.equals("5k")) {
-                speed = 5 / ((double) time / (60 * 60));
-            } else if (distance.equals("10k")) {
-                speed = 10 / ((double) time / (60 * 60));
-            } else if (distance.equals("half_marathon")) {
-                speed = 21.0975 / ((double) time / (60 * 60));
-            } else if (distance.equals("marathon")) {
-                speed = 42.195 / ((double) time / (60 * 60));
+        percentileTextView.setText(Integer.toString(percentile) + "%");
+        allPercentileTextView.setText(Integer.toString(allPercentile) + "%");
+        ageGradeTextView.setText(Integer.toString(ageGrade) + "%");
+        paceTextView.setText(pace);
+    }
+
+    private int getPercentile(String sql){
+        int time = getTimeInSeconds();
+        MyDataBase runningDatabase = new MyDataBase(this);
+        SQLiteDatabase runningSQLDatabase = runningDatabase.getReadableDatabase();
+
+        Cursor cursor = runningSQLDatabase.rawQuery(sql,null);
+        HashMap<Integer,Integer> hashMap = new HashMap<>();
+
+        String timeColumn = distance + "_time";
+        while(cursor.moveToNext()){
+            int percentile = cursor.getInt(cursor.getColumnIndexOrThrow("percentile"));
+            int mTime = cursor.getInt(cursor.getColumnIndexOrThrow(timeColumn));
+            hashMap.put(percentile,mTime);
+        }
+        int runningPercentile = 1;
+        int runningTimeDifference = 99999999;
+        for(Map.Entry<Integer,Integer> entry: hashMap.entrySet()){
+            int difference = Math.abs(time - entry.getValue());
+            if(difference < runningTimeDifference){
+                runningTimeDifference = difference;
+                runningPercentile = entry.getKey();
             }
-
-            int allPercentile = getPercentile(time, "SELECT * FROM Alll");
-
-            percentileTextView.setText(Integer.toString(percentile) + "%");
-            allPercentileTextView.setText(Integer.toString(allPercentile) + "%");
-            speedTextView.setText(String.format("%.2f", speed) + " km/hr");
-            textView5.setText("Percentile of " + gender.toLowerCase() + " runners:");
         }
+        cursor.close();
+        return 100-runningPercentile;
+    }
+
+    private int getAgeGrade(int age){
+        MyDataBase runningDatabase = new MyDataBase(this);
+        SQLiteDatabase runningSQLDatabase = runningDatabase.getReadableDatabase();
+
+        String timeColumn = distance + "_time";
+        String sql = "SELECT * FROM " + gender + "_age_grading" + " WHERE age=" + age;
+        Cursor cursor = runningSQLDatabase.rawQuery(sql,null);
+        double fastestTime = 0;
+
+        while(cursor.moveToNext()){
+            fastestTime = cursor.getDouble(cursor.getColumnIndexOrThrow(timeColumn));
+        }
+        double runnerTime = (double) getTimeInSeconds();
+        int ageGrade = (int) Math.round((fastestTime/runnerTime)*100);
+
+        cursor.close();
+        return ageGrade;
     }
 
     private int getTimeInSeconds(){
@@ -200,47 +273,14 @@ public class CalculatorActivity extends AppCompatActivity {
         }
         return hours + minutes + seconds;
     }
-    private int getPercentile(int runningTime, String sql){
-        MyDataBase runningDatabase = new MyDataBase(this);
-        SQLiteDatabase runningSQLDatabase = runningDatabase.getReadableDatabase();
 
-
-        Cursor cursor = runningSQLDatabase.rawQuery(sql,null);
-        HashMap<Integer,Integer> hashMap = new HashMap<>();
-
-        Spinner distanceSpinner = findViewById(R.id.distance);
-        String text = distanceSpinner.getSelectedItem().toString();
-
-        if(text.equals("5 Kilometers")){
-            distance = "5k";
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId()) {
+            case android.R.id.home:
+                drawerLayout.openDrawer(GravityCompat.START);
+                return true;
         }
-        else if(text.equals("10 Kilometers")){
-            distance = "10k";
-        }
-        else if(text.equals("Half Marathon")){
-            distance = "half_marathon";
-        }
-        else if(text.equals("Marathon")){
-            distance = "marathon";
-        }
-
-        String timeColumn = distance + "_time";
-        while(cursor.moveToNext()){
-            int percentile = cursor.getInt(cursor.getColumnIndexOrThrow("percentile"));
-            int time = cursor.getInt(cursor.getColumnIndexOrThrow(timeColumn));
-            hashMap.put(percentile,time);
-        }
-        int runningPercentile = 1;
-        int runningTimeDifference = 99999999;
-        for(Map.Entry<Integer,Integer> entry: hashMap.entrySet()){
-            int difference = Math.abs(runningTime - entry.getValue());
-            if(difference < runningTimeDifference){
-                runningTimeDifference = difference;
-                runningPercentile = entry.getKey();
-            }
-        }
-        cursor.close();
-        return 100-runningPercentile;
+        return super.onOptionsItemSelected(item);
     }
-
 }

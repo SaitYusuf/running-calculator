@@ -1,4 +1,4 @@
-package yusufsait.com.runningpercentilecalculator;
+package yusufsait.com.runningcalculator;
 
 import android.content.Context;
 import android.support.test.InstrumentationRegistry;

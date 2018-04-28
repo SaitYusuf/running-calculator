@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">Running Percentile Calculator</string>
+    <string name="app_name">Running Calculator</string>
     <string name="about">About</string>
     <string name="rate">Rate</string>
     <string name="feedback">Feedback/Bugs</string>
