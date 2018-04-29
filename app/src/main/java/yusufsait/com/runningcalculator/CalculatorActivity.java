@@ -7,6 +7,9 @@ import android.database.sqlite.SQLiteDatabase;
 import android.net.Uri;
 import android.support.annotation.NonNull;
 import android.support.design.widget.NavigationView;
+import android.support.v4.app.Fragment;
+import android.support.v4.app.FragmentManager;
+import android.support.v4.app.FragmentTransaction;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBar;
@@ -27,7 +30,7 @@ import android.widget.Toast;
 import java.util.HashMap;
 import java.util.Map;
 
-public class CalculatorActivity extends AppCompatActivity {
+public class CalculatorActivity extends AppCompatActivity implements AboutFragment.OnFragmentInteractionListener{
     private DrawerLayout drawerLayout;
     String distance = "5k";
     String gender = "Male";
@@ -37,7 +40,7 @@ public class CalculatorActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_calculator);
 
-        Toolbar toolbar = findViewById(R.id.toolbar);
+        Toolbar toolbar = findViewById(R.id.fragment_toolbar);
         toolbar.setTitle("Calculate");
         setSupportActionBar(toolbar);
         ActionBar actionbar = getSupportActionBar();
@@ -58,8 +61,12 @@ public class CalculatorActivity extends AppCompatActivity {
                         drawerLayout.closeDrawers();
                         switch (menuItem.getItemId()) {
                             case R.id.nav_about:
-                                Intent aboutIntent = new Intent(CalculatorActivity.this, AboutActivity.class);
-                                startActivity(aboutIntent);
+                                Fragment aboutFragment = new AboutFragment();
+                                FragmentManager fragmentManager = getSupportFragmentManager();
+                                FragmentTransaction aboutFragmentTransaction = fragmentManager.beginTransaction();
+                                aboutFragmentTransaction.add(R.id.root,aboutFragment);
+                                aboutFragmentTransaction.addToBackStack(null);
+                                aboutFragmentTransaction.commit();
                                 break;
                             case R.id.nav_rate:
                                 Uri uri = Uri.parse("market://details?id=" + getPackageName());
@@ -277,5 +284,34 @@ public class CalculatorActivity extends AppCompatActivity {
                 return true;
         }
         return super.onOptionsItemSelected(item);
+    }
+
+    @Override
+    public void onFragmentInteraction(Uri uri) {
+
+    }
+    public void onClickYusuf(View view){
+        String url = "https://saityusuf.github.io/";
+        Intent i = new Intent(Intent.ACTION_VIEW);
+        i.setData(Uri.parse(url));
+        startActivity(i);
+    }
+    public void onClickDino(View view){
+        String url = "https://www.flaticon.com/authors/dinosoftlabs";
+        Intent i = new Intent(Intent.ACTION_VIEW);
+        i.setData(Uri.parse(url));
+        startActivity(i);
+    }
+    public void onClickFreepik(View view){
+        String url = "https://www.flaticon.com/authors/freepik";
+        Intent i = new Intent(Intent.ACTION_VIEW);
+        i.setData(Uri.parse(url));
+        startActivity(i);
+    }
+    public void onClickTurkkub(View view){
+        String url = "https://www.flaticon.com/authors/turkkub";
+        Intent i = new Intent(Intent.ACTION_VIEW);
+        i.setData(Uri.parse(url));
+        startActivity(i);
     }
 }
