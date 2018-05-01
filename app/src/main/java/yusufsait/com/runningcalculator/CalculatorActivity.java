@@ -2,6 +2,7 @@ package yusufsait.com.runningcalculator;
 
 import android.content.ActivityNotFoundException;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.net.Uri;
@@ -48,7 +49,12 @@ public class CalculatorActivity extends AppCompatActivity implements AboutFragme
             actionbar.setDisplayHomeAsUpEnabled(true);
             actionbar.setHomeAsUpIndicator(R.drawable.ic_menu_white_24dp);
         }
+        SharedPreferences sharedPref = getPreferences(MODE_PRIVATE);
+        distance = sharedPref.getString("distance","5k");
+        gender = sharedPref.getString("gender","Male");
 
+        Spinner distanceSpinner = findViewById(R.id.distance);
+        final Spinner genderSpinner = findViewById(R.id.gender);
 
         drawerLayout = findViewById(R.id.drawer_layout);
         NavigationView navigationView = findViewById(R.id.nav_view);
@@ -97,15 +103,32 @@ public class CalculatorActivity extends AppCompatActivity implements AboutFragme
                         return true;
                     }
                 });
-        Spinner distanceSpinner = findViewById(R.id.distance);
         ArrayAdapter<CharSequence> distanceAdapter = ArrayAdapter.createFromResource(this, R.array.distance, android.R.layout.simple_spinner_item);
         distanceAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         distanceSpinner.setAdapter(distanceAdapter);
 
-        Spinner genderSpinner = findViewById(R.id.gender);
         ArrayAdapter<CharSequence> genderAdapter = ArrayAdapter.createFromResource(this, R.array.gender, android.R.layout.simple_spinner_item);
         genderAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         genderSpinner.setAdapter(genderAdapter);
+
+            if (distance.equals("5k")){
+                distanceSpinner.setSelection(0);
+            }
+            else if (distance.equals("10k")){
+                distanceSpinner.setSelection(1);
+            }
+            else if (distance.equals("half_marathon")){
+                distanceSpinner.setSelection(2);
+            }
+            else if (distance.equals("marathon")){
+                distanceSpinner.setSelection(3);
+            }
+            if (gender.equals("Male")){
+                genderSpinner.setSelection(0);
+            }
+            else if (gender.equals("Female")) {
+                genderSpinner.setSelection(1);
+            }
 
         distanceSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             public void onItemSelected(AdapterView<?> parent, View view, int position, long id)
@@ -125,6 +148,10 @@ public class CalculatorActivity extends AppCompatActivity implements AboutFragme
                         distance = "marathon";
                         break;
                 }
+                SharedPreferences sharedPref = getPreferences(MODE_PRIVATE);
+                SharedPreferences.Editor editor = sharedPref.edit();
+                editor.putString("distance",distance);
+                editor.commit();
             }
             public void onNothingSelected(AdapterView<?> parent)
             {
@@ -134,7 +161,10 @@ public class CalculatorActivity extends AppCompatActivity implements AboutFragme
         genderSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             public void onItemSelected(AdapterView<?> parent, View view, int position, long id)
             {
-                gender = parent.getItemAtPosition(position).toString();
+                SharedPreferences sharedPref = getPreferences(MODE_PRIVATE);
+                SharedPreferences.Editor editor = sharedPref.edit();
+                editor.putString("gender",genderSpinner.getItemAtPosition(position).toString());
+                editor.commit();
             }
             public void onNothingSelected(AdapterView<?> parent)
             {
@@ -162,11 +192,12 @@ public class CalculatorActivity extends AppCompatActivity implements AboutFragme
         TextView allPercentileTextView = findViewById(R.id.all_percentile);
         TextView ageGradeTextView = findViewById(R.id.age_grade);
         TextView textView5 = findViewById(R.id.textView5);
-        Spinner genderSpinner = findViewById(R.id.gender);
         EditText hoursEditText = findViewById(R.id.hour);
         EditText minutesEditText = findViewById(R.id.minute);
         EditText secondsEditText = findViewById(R.id.second);
         EditText ageEditText = findViewById(R.id.age);
+
+
 
 
         if(hoursEditText.getText().length() ==0 && minutesEditText.getText().length() == 0 && secondsEditText.getText().length() ==0) {
@@ -188,11 +219,11 @@ public class CalculatorActivity extends AppCompatActivity implements AboutFragme
         String pace = "";
         switch (distance) {
             case "5k":
-                int pace5k = (int) Math.round(time/5);
+                int pace5k = Math.round(time/5);
                 pace = (pace5k/60) + ":" + String.format("%02d",(pace5k%60)) + "/km";
                 break;
             case "10k":
-                int pace10k = (int) Math.round(time/10);
+                int pace10k = Math.round(time/10);
                 pace = (pace10k/60) + ":" + String.format("%02d",(pace10k%60)) + "/km";
                 break;
             case "half_marathon":
